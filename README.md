@@ -22,11 +22,11 @@ Here is the full picture of what I built:
 ┌─────────────────────────────────────────────────────────────┐
 │                    Home WiFi Network                        │
 │                                                             │
-│   ┌──────────────┐   attacks   ┌──────────────────────┐    │
-│   │  Kali Linux  │ ──────────▶ │    Windows 10 VM     │    │
-│   │ 192.168.1.18 │             │    192.168.1.11       │    │
-│   │  Attacker    │             │  Target + Forwarder   │    │
-│   └──────────────┘             └──────────┬───────────┘    │
+│   ┌──────────────┐   attacks   ┌──────────────────────┐     │
+│   │  Kali Linux  │ ──────────▶ │    Windows 10 VM     │     │
+│   │ 192.168.1.18 │             │    192.168.1.11      │     │
+│   │  Attacker    │             │  Target + Forwarder  │     │
+│   └──────────────┘             └──────────┬───────────┘     │
 │                                           │ logs (port 9997)│
 │                                    ┌──────▼──────────┐      │
 │                                    │   Mac Laptop    │      │
@@ -234,8 +234,7 @@ nmap -sS -A 192.168.1.11
 
 The `-sS` flag does a stealth SYN scan and `-A` enables OS detection and service version detection.
 
-> Screenshot 1 — Nmap scan results showing DESKTOP-KLVA0MN open ports and OS details
-
+![Nmap Scan Results](01-nmap-scan.png)
 The results told me everything I needed:
 
 ```
@@ -282,7 +281,7 @@ set LPORT 4444
 run
 ```
 
-> Screenshot 2 — Metasploit listener running on Kali waiting for incoming connection
+![Metasploit Listener](/02-metasploit-listener.png)
 
 The terminal showed:
 ```
@@ -318,7 +317,7 @@ sysinfo
 getuid
 ```
 
-> Screenshot 3 — Meterpreter session showing complete access to DESKTOP-KLVA0MN as user Tayyab
+![Meterpreter Session](03-meterpreter-session.png)
 
 Output:
 ```
@@ -345,7 +344,7 @@ Right after the Nmap scan I ran this search in Splunk:
 index=winsec | table _time, host, EventCode, src_ip | sort -_time
 ```
 
-> Screenshot 4 — Splunk showing 42 security events from DESKTOP-KLVA0MN
+![Splunk Events](04-splunk-events.png)
 
 Splunk had logged 42 events. The Nmap probe generated network connection events across multiple Windows event codes. The machine activity was fully visible in the SIEM.
 
@@ -361,7 +360,7 @@ index=winsec EventCode=4688
 | table _time, host, New_Process_Name, Creator_Process_Name
 ```
 
-> Screenshot 5 — Splunk showing payload.exe executed 3 times from C:\Users\Tayyab\Downloads\
+![Splunk Payload Detection](05-splunk-payload-detection.png)
 
 Results:
 
@@ -377,7 +376,7 @@ Three executions. All from the Downloads folder. All launched by Windows Explore
 
 I built a Splunk dashboard called **SOC Lab — Binyameen** to show all detections in one place. I went to Dashboards → Create New Dashboard, added panels using the process creation query, and saved it.
 
-> Screenshot 6 — Splunk dashboard showing Suspicious Process Creation panel with live EventCode 4688 events
+![Splunk Dashboard](06-splunk-dashboard.png)
 
 The dashboard showed the full event details — time, computer name, log source, event code — exactly what a real SOC analyst sees during an active investigation.
 
@@ -391,7 +390,7 @@ Go to Search and Reporting → run the detection query → Save As → Alert:
 - Run every: 1 hour
 - Trigger: Number of results greater than 0
 
-> Screenshot 7 — Splunk Alerts page showing Suspicious Process Creation alert enabled and scheduled
+![Splunk Alerts](07-splunk-alerts.png)
 
 The alert is live. Status shows Enabled. Next scheduled run: 31 Mar 2026 17:23:00. In a real environment this would automatically notify the on-call analyst.
 
